@@ -31,7 +31,15 @@ export default function Login() {
         navigate('/student', { replace: true });
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Invalid email or password');
+      if (!err.response) {
+        toast.error(
+          err.message === 'Network Error'
+            ? 'Cannot connect to backend server. If Render is waking up from sleep, please wait 30 seconds and retry.'
+            : (err.message || 'Network connection failed')
+        );
+      } else {
+        toast.error(err.response?.data?.message || 'Invalid email or password');
+      }
     } finally {
       setLoading(false);
     }
