@@ -12,8 +12,12 @@ const errorHandler = require('./middleware/error.middleware');
 
 const app = express();
 
-const clientOrigin = process.env.CLIENT_URL || 'http://localhost:5173';
-app.use(cors({ origin: clientOrigin, credentials: true }));
+app.use(
+  cors({
+    origin: (origin, callback) => callback(null, true),
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
