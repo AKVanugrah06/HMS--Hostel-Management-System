@@ -156,12 +156,3 @@ node test_api.js
 All 14 tests run synchronously against the Express server and verify the complete lifecycle.
 
 ---
-
-## 🎓 Academic / Viva Talking Points
-
-1. **Why redirect instead of direct payment gateway API?**
-   - Universities use centralized ERP/fee collection portals (such as the **Samarth Fee Portal**). External student apps do not have institutional banking API access. The reference challan redirect pattern is the industry standard for reconciling offline/external payments.
-2. **How is double-booking prevented?**
-   - The room allocation logic checks `occupiedCount < capacity` inside an atomic Prisma `$transaction`. If two wardens or students try to lock the last seat simultaneously, the database transaction ensures only one succeeds and the other receives a descriptive error.
-3. **Audit Trail**:
-   - Every state transition stores `decidedBy`, `decidedAt`, `verifiedBy`, and `verifiedAt` timestamps linking directly to staff accounts.
