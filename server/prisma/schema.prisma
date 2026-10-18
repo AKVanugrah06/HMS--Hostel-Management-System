@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String        @id @default(uuid())
+  email                 String        @unique
+  passwordHash          String
+  role                  String        @default("student") // 'student', 'warden', 'super_admin'
+  isVerified            Boolean       @default(false)
+  verificationToken     String?
+  resetPasswordToken    String?
+  resetPasswordExpires  DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  student               Student?
+  warden                Warden?
+  notifications         Notification[]
+}
+
+model Student {
+  id               String            @id @default(uuid())
+  userId           String            @unique
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName         String
+  rollNo           String            @unique
+  course           String
+  year             Int
+  phone            String
+  emergencyContact String
+  idProofUrl       String?
+  profilePhotoUrl  String?
+  createdAt        DateTime          @default(now())
+
+  applications     RoomApplication[]
+  payments         Payment[]
+  complaints       Complaint[]
+}
+
+model Warden {
+  id                   String            @id @default(uuid())
+  userId               String            @unique
+  user                 User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName             String
+  assignedBlock        String?
+  phone                String?
+  createdAt            DateTime          @default(now())
+
+  decidedApplications  RoomApplication[] @relation("DecidedByWarden")
+  verifiedPayments     Payment[]         @relation("VerifiedByWarden")
+  handledComplaints    Complaint[]       @relation("HandledByWarden")
+}
+
+model Room {
+  id            String            @id @default(uuid())
+  roomNo        String            @unique
+  block         String
+  floor         Int
+  sharingType   String            // 'single', 'double', 'triple', '4-sharing'
+  capacity      Int               // 1, 2, 3, 4
+  occupiedCount Int               @default(0)
+  feePerHead    Float
+  status        String            @default("available") // 'available', 'full', 'maintenance'
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  applications  RoomApplication[]
+  complaints    Complaint[]
+}
+
+model RoomApplication {
+  id                    String    @id @default(uuid())
+  studentId             String
+  student               Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  preferredSharingType  String    // 'single', 'double', 'triple', '4-sharing'
+  assignedRoomId        String?
+  assignedRoom          Room?     @relation(fields: [assignedRoomId], references: [id])
+  status                String    @default("pending") // 'pending', 'approved', 'rejected', 'vacated'
+  appliedAt             DateTime  @default(now())
+  decidedAt             DateTime?
+  decidedBy             String?
+  decidedByWarden       Warden?   @relation("DecidedByWarden", fields: [decidedBy], references: [id])
+  rejectionReason       String?
+
+  payment               Payment?
+}
+
+model Payment {
+  id                   String          @id @default(uuid())
+  studentId            String
+  student              Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  applicationId        String          @unique
+  application          RoomApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  amountDue            Float
+  referenceNo          String          @unique
+  portalTransactionId  String?
+  receiptUploadUrl     String?
+  status               String          @default("pending") // 'pending', 'submitted', 'verified', 'rejected'
+  submittedAt          DateTime?
+  verifiedBy           String?
+  verifiedByWarden     Warden?         @relation("VerifiedByWarden", fields: [verifiedBy], references: [id])
+  verifiedAt           DateTime?
+  notes                String?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+}
+
+model Complaint {
+  id               String    @id @default(uuid())
+  studentId        String
+  student          Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  roomId           String?
+  room             Room?     @relation(fields: [roomId], references: [id])
+  category         String    // 'electrical', 'plumbing', 'wifi', 'furniture', 'other'
+  description      String
+  photoUrl         String?
+  status           String    @default("pending") // 'pending', 'in_progress', 'resolved'
+  raisedAt         DateTime  @default(now())
+  resolvedAt       DateTime?
+  handledBy        String?
+  handledByWarden  Warden?   @relation("HandledByWarden", fields: [handledBy], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  type      String   // 'registration', 'allocation', 'payment', 'complaint'
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

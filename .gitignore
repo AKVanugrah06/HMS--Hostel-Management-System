@@ -1,0 +1,38 @@
+# Dependency directories
+node_modules/
+*/node_modules/
+
+# Production build outputs
+dist/
+build/
+*/dist/
+
+# Environment files (never commit real secrets)
+.env
+*/.env
+*.env.local
+
+# Database files
+*.db
+*.db-journal
+server/prisma/*.db
+server/prisma/*.db-journal
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Uploaded media (keep gitkeeps, ignore real user uploads)
+server/uploads/receipts/*
+!server/uploads/receipts/.gitkeep
+server/uploads/complaints/*
+!server/uploads/complaints/.gitkeep
+server/uploads/profiles/*
+!server/uploads/profiles/.gitkeep
